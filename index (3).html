@@ -1,0 +1,1000 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Rio Truss — Warehouse Addition — Project Schedule</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600;700&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap');
+
+  :root {
+    --bg: #1a2e1a;
+    --bg-dark: #142414;
+    --bg-card: #223a22;
+    --bg-card-hover: #2a4a2a;
+    --border: #3a5a3a;
+    --border-light: #4a6a4a;
+    --text: #d4e4c8;
+    --text-dim: #8aaa7a;
+    --text-bright: #e8f0e0;
+    --accent-gold: #c8a84a;
+    --accent-red: #c44a3a;
+    --accent-blue: #4a8ac4;
+    --accent-green: #4aaa5a;
+    --accent-orange: #d48a2a;
+    --status-confirmed: #4aaa5a;
+    --status-tentative: #d48a2a;
+    --status-pending: #c44a3a;
+    --status-completed: #6b7d8c;
+    --status-progress: #2e8bc0;
+    --gantt-red: #c44a3a;
+    --gantt-blue: #4a8ac4;
+    --gantt-teal: #3a9a8a;
+    --gantt-orange: #d48a2a;
+    --gantt-green: #4a8a4a;
+    --mono: 'IBM Plex Mono', monospace;
+    --sans: 'IBM Plex Sans', sans-serif;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--sans);
+    font-size: 14px;
+    line-height: 1.5;
+    min-height: 100vh;
+  }
+
+  /* ── HEADER ── */
+  .header {
+    background: var(--bg-dark);
+    padding: 32px 40px 24px;
+    position: relative;
+    overflow: hidden;
+    border-bottom: 2px solid var(--border);
+  }
+  .header::after {
+    content: '';
+    position: absolute;
+    top: -40px; right: -40px;
+    width: 180px; height: 180px;
+    background: radial-gradient(circle, rgba(74,138,74,0.15) 0%, transparent 70%);
+    border-radius: 50%;
+  }
+  .header-badge {
+    display: inline-block;
+    background: var(--accent-gold);
+    color: var(--bg-dark);
+    font-family: var(--mono);
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    padding: 3px 10px;
+    border-radius: 2px;
+    margin-bottom: 8px;
+  }
+  .header h1 {
+    font-family: var(--mono);
+    font-size: 42px;
+    font-weight: 700;
+    color: var(--text-bright);
+    letter-spacing: -1px;
+    line-height: 1.1;
+  }
+  .header-sub {
+    font-family: var(--mono);
+    font-size: 12px;
+    color: var(--text-dim);
+    margin-top: 6px;
+    letter-spacing: 0.5px;
+  }
+  .header-status {
+    display: inline-block;
+    margin-top: 12px;
+    background: var(--status-progress);
+    color: #fff;
+    font-family: var(--mono);
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    padding: 4px 12px;
+    border-radius: 2px;
+  }
+
+  /* ── INFO BAR ── */
+  .info-bar {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    border-bottom: 1px solid var(--border);
+    background: var(--bg-dark);
+  }
+  .info-item {
+    padding: 16px 40px;
+    border-right: 1px solid var(--border);
+  }
+  .info-item:last-child { border-right: none; }
+  .info-label {
+    font-family: var(--mono);
+    font-size: 9px;
+    font-weight: 600;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--text-dim);
+    margin-bottom: 4px;
+  }
+  .info-value {
+    font-family: var(--sans);
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text-bright);
+  }
+
+  /* ── SECTIONS ── */
+  .container { max-width: 1100px; margin: 0 auto; padding: 0 40px; }
+
+  .section { padding: 40px 0 20px; }
+  .section-title {
+    font-family: var(--mono);
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: var(--text-dim);
+    margin-bottom: 24px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  /* ── GANTT CHART ── */
+  .gantt-wrapper { overflow-x: auto; }
+  .gantt-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-family: var(--mono);
+    font-size: 11px;
+  }
+  .gantt-table th {
+    font-weight: 500;
+    color: var(--text-dim);
+    padding: 6px 0;
+    text-align: center;
+    min-width: 52px;
+    font-size: 10px;
+    letter-spacing: 0.5px;
+  }
+  .gantt-table th:first-child {
+    text-align: left;
+    min-width: 240px;
+    padding-left: 4px;
+  }
+  .gantt-row-label {
+    font-size: 10px;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    color: var(--accent-gold);
+    font-weight: 600;
+    padding: 12px 4px 2px;
+  }
+  .gantt-row td {
+    padding: 4px 2px;
+    text-align: left;
+    font-size: 12px;
+    color: var(--text);
+  }
+  .gantt-row td:first-child {
+    padding-left: 4px;
+    font-size: 12px;
+  }
+  .gantt-cell {
+    height: 22px;
+    border-radius: 2px;
+  }
+  .g-red { background: var(--gantt-red); }
+  .g-blue { background: var(--gantt-blue); }
+  .g-teal { background: var(--gantt-teal); }
+  .g-orange { background: var(--gantt-orange); }
+  .g-green { background: var(--gantt-green); }
+  .g-dark { background: var(--bg-card); }
+  .g-hatch {
+    background: repeating-linear-gradient(45deg, var(--gantt-orange), var(--gantt-orange) 4px, var(--bg-dark) 4px, var(--bg-dark) 8px);
+  }
+  .gantt-current { background: rgba(200,168,74,0.12); }
+  .wbs {
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--text-dim);
+    margin-right: 8px;
+  }
+
+  /* ── PHASE CARDS ── */
+  .phase-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 16px;
+  }
+  .phase-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 16px;
+    position: relative;
+  }
+  .phase-card:hover { border-color: var(--border-light); }
+  .phase-num {
+    position: absolute;
+    top: 12px; right: 14px;
+    font-family: var(--mono);
+    font-size: 28px;
+    font-weight: 700;
+    color: rgba(255,255,255,0.06);
+  }
+  .phase-status {
+    display: inline-block;
+    font-family: var(--mono);
+    font-size: 8px;
+    font-weight: 700;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    padding: 2px 8px;
+    border-radius: 2px;
+    margin-bottom: 10px;
+  }
+  .ps-confirmed { background: var(--status-confirmed); color: var(--bg-dark); }
+  .ps-tentative { background: var(--status-tentative); color: var(--bg-dark); }
+  .ps-pending { background: var(--status-pending); color: #fff; }
+  .ps-completed { background: var(--status-completed); color: #fff; }
+  .ps-progress { background: var(--status-progress); color: #fff; }
+  .phase-card h3 {
+    font-family: var(--sans);
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--text-bright);
+    margin-bottom: 4px;
+    line-height: 1.3;
+  }
+  .phase-meta {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--text-dim);
+    margin-bottom: 10px;
+  }
+  .phase-dates {
+    font-family: var(--mono);
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--accent-gold);
+    margin-bottom: 8px;
+  }
+  .phase-desc {
+    font-size: 12px;
+    color: var(--text-dim);
+    line-height: 1.5;
+  }
+
+  /* ── TABLES ── */
+  .vendor-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+  }
+  .vendor-table th {
+    font-family: var(--mono);
+    font-size: 9px;
+    font-weight: 600;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--text-dim);
+    text-align: left;
+    padding: 8px 12px;
+    border-bottom: 1px solid var(--border);
+  }
+  .vendor-table td {
+    padding: 10px 12px;
+    border-bottom: 1px solid rgba(58,90,58,0.4);
+    color: var(--text);
+  }
+  .vendor-table tr:hover td { background: rgba(255,255,255,0.02); }
+  .vendor-dot {
+    display: inline-block;
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    margin-right: 8px;
+    vertical-align: middle;
+  }
+  .vd-red { background: var(--accent-red); }
+  .vd-orange { background: var(--accent-orange); }
+  .vd-green { background: var(--accent-green); }
+  .vd-blue { background: var(--accent-blue); }
+  .vendor-status-badge {
+    display: inline-block;
+    font-family: var(--mono);
+    font-size: 9px;
+    font-weight: 700;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    padding: 2px 8px;
+    border-radius: 2px;
+  }
+  .vsb-confirmed { background: var(--status-confirmed); color: var(--bg-dark); }
+  .vsb-tentative { background: var(--status-tentative); color: var(--bg-dark); }
+  .vsb-pending { background: var(--status-pending); color: #fff; }
+  .vsb-completed { background: var(--status-completed); color: #fff; }
+  .vsb-progress { background: var(--status-progress); color: #fff; }
+
+  /* ── COST TABLE ── */
+  .cost-code {
+    font-family: var(--mono);
+    font-size: 12px;
+    color: var(--accent-gold);
+    font-weight: 600;
+  }
+  .num {
+    font-family: var(--mono);
+    text-align: right;
+    white-space: nowrap;
+  }
+  .cost-subtotal td {
+    border-top: 1px solid var(--border-light);
+    border-bottom: 1px solid var(--border-light);
+    font-weight: 700;
+    color: var(--text-bright);
+    background: rgba(255,255,255,0.02);
+  }
+  .cost-total td {
+    border-top: 2px solid var(--accent-gold);
+    font-weight: 700;
+    color: var(--accent-gold);
+    font-size: 14px;
+  }
+  .cost-note {
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--text-dim);
+    margin-top: 12px;
+    letter-spacing: 0.3px;
+  }
+
+  /* ── SITE REFERENCES ── */
+  .site-ref-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 20px;
+    margin-bottom: 24px;
+  }
+  .site-ref-card h3 {
+    font-family: var(--sans);
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--text-bright);
+    margin-bottom: 2px;
+  }
+  .site-ref-sub {
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--text-dim);
+    letter-spacing: 0.5px;
+    margin-bottom: 12px;
+  }
+  .photo-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+  }
+  .photo-grid figure { margin: 0; }
+  .photo-grid img {
+    width: 100%;
+    height: 200px;
+    object-fit: cover;
+    border-radius: 3px;
+    border: 1px solid var(--border);
+    display: block;
+    background: var(--bg-dark);
+  }
+  .photo-grid figcaption {
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--text-dim);
+    margin-top: 6px;
+    letter-spacing: 0.3px;
+  }
+  .spec-list {
+    list-style: none;
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 4px 24px;
+  }
+  .spec-list li {
+    font-size: 12px;
+    color: var(--text);
+    padding: 6px 0;
+    border-bottom: 1px solid rgba(58,90,58,0.3);
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+  }
+  .spec-list .k { color: var(--text-dim); font-family: var(--mono); font-size: 11px; }
+  .spec-list .v { font-family: var(--mono); font-size: 11px; color: var(--text-bright); text-align: right; }
+
+  /* ── NOTES ── */
+  .notes-list { list-style: none; padding: 0; }
+  .notes-list li {
+    padding: 10px 0;
+    border-bottom: 1px solid rgba(58,90,58,0.3);
+    font-size: 13px;
+    color: var(--text);
+    line-height: 1.6;
+    position: relative;
+    padding-left: 20px;
+  }
+  .notes-list li::before {
+    content: '~';
+    position: absolute;
+    left: 0;
+    color: var(--text-dim);
+    font-family: var(--mono);
+  }
+  .flag {
+    display: inline-block;
+    font-family: var(--mono);
+    font-size: 9px;
+    font-weight: 700;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    padding: 1px 6px;
+    border-radius: 2px;
+    background: var(--accent-red);
+    color: #fff;
+    margin-right: 8px;
+    vertical-align: 1px;
+  }
+  .flag-watch { background: var(--accent-orange); color: var(--bg-dark); }
+
+  /* ── FOOTER ── */
+  .footer {
+    margin-top: 40px;
+    padding: 20px 40px;
+    border-top: 1px solid var(--border);
+    display: flex;
+    justify-content: space-between;
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--text-dim);
+    letter-spacing: 0.5px;
+    background: var(--bg-dark);
+  }
+
+  [contenteditable="true"]:focus {
+    outline: 1px dashed var(--accent-gold);
+    outline-offset: 2px;
+    background: rgba(200,168,74,0.05);
+  }
+
+  @media (max-width: 900px) {
+    .phase-grid { grid-template-columns: repeat(2, 1fr); }
+    .info-bar { grid-template-columns: repeat(2, 1fr); }
+    .info-item:nth-child(2) { border-right: none; }
+    .container { padding: 0 20px; }
+    .header { padding: 24px 20px 20px; }
+    .photo-grid { grid-template-columns: 1fr; }
+    .spec-list { grid-template-columns: 1fr; }
+  }
+  @media (max-width: 600px) {
+    .phase-grid { grid-template-columns: 1fr; }
+    .info-bar { grid-template-columns: 1fr; }
+    .info-item { border-right: none; border-bottom: 1px solid var(--border); }
+  }
+
+  @media print {
+    body { background: #fff; color: #222; }
+    .header { background: #f5f5f0; border-bottom-color: #ccc; }
+    .phase-card, .site-ref-card { border-color: #ccc; background: #fafafa; }
+    .info-bar { background: #f5f5f0; }
+    .footer { background: #f5f5f0; border-top-color: #ccc; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ════════════════════════════════════════════════════════ -->
+<!-- HEADER                                                  -->
+<!-- ════════════════════════════════════════════════════════ -->
+<div class="header">
+  <div class="header-badge">McCoy's Building Supply &nbsp;|&nbsp; Capital Expenditure Project</div>
+  <h1>RIO TRUSS</h1>
+  <div class="header-sub">Warehouse Addition — Blade II Lean-To Canopy &nbsp;&bull;&nbsp; 100 N. Bentsen Rd., McAllen, TX 78501</div>
+  <div class="header-status" contenteditable="true">● Foundation Complete — Steel Delivery 7/15</div>
+</div>
+
+<!-- ════════════════════════════════════════════════════════ -->
+<!-- INFO BAR                                                -->
+<!-- ════════════════════════════════════════════════════════ -->
+<div class="info-bar">
+  <div class="info-item">
+    <div class="info-label">Project Start</div>
+    <div class="info-value" contenteditable="true">April 3, 2026</div>
+  </div>
+  <div class="info-item">
+    <div class="info-label">Target Completion</div>
+    <div class="info-value" contenteditable="true">August 1, 2026 (120-day)</div>
+  </div>
+  <div class="info-item">
+    <div class="info-label">Supervisor</div>
+    <div class="info-value" contenteditable="true">Leeland Weiss</div>
+  </div>
+  <div class="info-item">
+    <div class="info-label">Permit No.</div>
+    <div class="info-value" contenteditable="true">CMM2026-03294</div>
+  </div>
+</div>
+
+<div class="container">
+
+<!-- ════════════════════════════════════════════════════════ -->
+<!-- GANTT CHART                                             -->
+<!-- ════════════════════════════════════════════════════════ -->
+<div class="section">
+  <div class="section-title">Gantt Chart — Weekly View</div>
+  <div class="gantt-wrapper">
+    <table class="gantt-table">
+      <thead>
+        <tr>
+          <th></th>
+          <th>6/1</th>
+          <th>6/8</th>
+          <th>6/15</th>
+          <th>6/22</th>
+          <th>6/29</th>
+          <th class="gantt-current">7/6</th>
+          <th>7/13</th>
+          <th>7/20</th>
+          <th>7/27</th>
+          <th>8/3</th>
+          <th>8/10</th>
+        </tr>
+      </thead>
+      <tbody>
+        <!-- 01 Design & Engineering -->
+        <tr><td colspan="12" class="gantt-row-label">01 — Design &amp; Engineering</td></tr>
+        <tr class="gantt-row">
+          <td><span class="wbs">01.1</span>Sealed plans — ST26-25</td>
+          <td><div class="gantt-cell g-dark"></div></td>
+          <td><div class="gantt-cell g-dark"></div></td>
+          <td></td><td></td><td></td>
+          <td class="gantt-current"></td>
+          <td></td><td></td><td></td><td></td><td></td>
+        </tr>
+        <tr class="gantt-row">
+          <td><span class="wbs">01.2</span>Permit — City of McAllen</td>
+          <td></td>
+          <td><div class="gantt-cell g-dark"></div></td>
+          <td><div class="gantt-cell g-dark"></div></td>
+          <td><div class="gantt-cell g-dark"></div></td>
+          <td></td>
+          <td class="gantt-current"></td>
+          <td></td><td></td><td></td><td></td><td></td>
+        </tr>
+
+        <!-- 03 Foundation -->
+        <tr><td colspan="12" class="gantt-row-label">03 — Foundation</td></tr>
+        <tr class="gantt-row">
+          <td><span class="wbs">03.1</span>Saw cut asphalt &amp; excavate footings</td>
+          <td></td><td></td><td></td><td></td>
+          <td><div class="gantt-cell g-teal"></div></td>
+          <td class="gantt-current"></td>
+          <td></td><td></td><td></td><td></td><td></td>
+        </tr>
+        <tr class="gantt-row">
+          <td><span class="wbs">03.1</span>Rebar &amp; foundation inspection</td>
+          <td></td><td></td><td></td><td></td><td></td>
+          <td class="gantt-current"><div class="gantt-cell g-teal"></div></td>
+          <td></td><td></td><td></td><td></td><td></td>
+        </tr>
+        <tr class="gantt-row">
+          <td><span class="wbs">03.2</span>Footing &amp; bollard pour</td>
+          <td></td><td></td><td></td><td></td><td></td>
+          <td class="gantt-current"><div class="gantt-cell g-teal"></div></td>
+          <td></td><td></td><td></td><td></td><td></td>
+        </tr>
+        <tr class="gantt-row">
+          <td><span class="wbs">03.3</span>Equipment pad — Change Order 001</td>
+          <td></td><td></td><td></td><td></td><td></td>
+          <td class="gantt-current"><div class="gantt-cell g-hatch"></div></td>
+          <td><div class="gantt-cell g-hatch"></div></td>
+          <td><div class="gantt-cell g-orange"></div></td>
+          <td></td><td></td><td></td>
+        </tr>
+
+        <!-- 04 Structural Steel -->
+        <tr><td colspan="12" class="gantt-row-label">04 — Building — Rebel Construction (Turn-Key)</td></tr>
+        <tr class="gantt-row">
+          <td><span class="wbs">04.1</span>Fabrication &amp; delivery</td>
+          <td></td><td></td><td></td><td></td>
+          <td><div class="gantt-cell g-blue"></div></td>
+          <td class="gantt-current"><div class="gantt-cell g-blue"></div></td>
+          <td><div class="gantt-cell g-blue"></div></td>
+          <td></td><td></td><td></td><td></td>
+        </tr>
+        <tr class="gantt-row">
+          <td><span class="wbs">04.2</span>Erection, roof, envelope &amp; electrical</td>
+          <td></td><td></td><td></td><td></td><td></td>
+          <td class="gantt-current"></td>
+          <td><div class="gantt-cell g-blue"></div></td>
+          <td><div class="gantt-cell g-blue"></div></td>
+          <td><div class="gantt-cell g-blue"></div></td>
+          <td><div class="gantt-cell g-blue"></div></td>
+          <td><div class="gantt-cell g-hatch"></div></td>
+        </tr>
+
+        <!-- 07 Equipment -->
+        <tr><td colspan="12" class="gantt-row-label">07 — Equipment — MatchPoint Blade II</td></tr>
+        <tr class="gantt-row">
+          <td><span class="wbs">07.1</span>Saw delivery, set &amp; anchor — MiTek</td>
+          <td></td><td></td><td></td><td></td><td></td>
+          <td class="gantt-current"></td>
+          <td></td><td></td><td></td>
+          <td><div class="gantt-cell g-orange"></div></td>
+          <td></td>
+        </tr>
+        <tr class="gantt-row">
+          <td><span class="wbs">07.3</span>Compressed air tie-in &amp; commissioning</td>
+          <td></td><td></td><td></td><td></td><td></td>
+          <td class="gantt-current"></td>
+          <td></td><td></td><td></td><td></td>
+          <td><div class="gantt-cell g-orange"></div></td>
+        </tr>
+
+        <!-- 08 Closeout -->
+        <tr><td colspan="12" class="gantt-row-label">08 — Closeout</td></tr>
+        <tr class="gantt-row">
+          <td><span class="wbs">08.1</span>Final inspection, punch, as-builts</td>
+          <td></td><td></td><td></td><td></td><td></td>
+          <td class="gantt-current"></td>
+          <td></td><td></td><td></td><td></td>
+          <td><div class="gantt-cell g-red"></div></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+  <div class="cost-note">Solid = scheduled &nbsp;·&nbsp; Hatched = float / unconfirmed duration &nbsp;·&nbsp; Highlighted column = current week &nbsp;·&nbsp; Numbers at left (01.1, 03.3, …) are Work Breakdown Structure codes. Rebel's turn-key scope runs as one bar (04.2); it is still broken into codes 05 and 06 on the cost table below for tracking.</div>
+</div>
+
+<!-- ════════════════════════════════════════════════════════ -->
+<!-- PHASE BREAKDOWN                                         -->
+<!-- ════════════════════════════════════════════════════════ -->
+<div class="section">
+  <div class="section-title">Phase Breakdown</div>
+  <div class="phase-grid">
+
+    <div class="phase-card">
+      <div class="phase-num">01</div>
+      <div class="phase-status ps-completed">Completed</div>
+      <h3 contenteditable="true">Design &amp; Permitting</h3>
+      <div class="phase-meta" contenteditable="true">Garza Garza Consulting &bull; Inez B. Garza, PE</div>
+      <div class="phase-dates" contenteditable="true">Jun 1 – Jun 8, 2026 ✓ COMPLETE</div>
+      <div class="phase-desc" contenteditable="true">Sealed plan set ST26-25 issued 6/1/26. S1.0 Foundation 6/4, S2.0 Framing 6/1 (rev. sag rods 6/8), A1.0 Floor/Elec 5/5. Permit CMM2026-03294 issued by City of McAllen.</div>
+    </div>
+
+    <div class="phase-card">
+      <div class="phase-num">03</div>
+      <div class="phase-status ps-completed">Completed</div>
+      <h3 contenteditable="true">Foundation &amp; Bollards</h3>
+      <div class="phase-meta" contenteditable="true">Rebel Construction &bull; Omar Rebeles</div>
+      <div class="phase-dates" contenteditable="true">Jul 3 – Jul 7, 2026 ✓ COMPLETE</div>
+      <div class="phase-desc" contenteditable="true">Asphalt saw cut and three 30"x30"x36" footings excavated Fri 7/3. Foundation inspection passed 7/6. Footings and bollards poured Tue 7/7 — 3,000 psi.</div>
+    </div>
+
+    <div class="phase-card">
+      <div class="phase-num">3.3</div>
+      <div class="phase-status ps-pending">Pending CO</div>
+      <h3 contenteditable="true">Equipment Pad</h3>
+      <div class="phase-meta" contenteditable="true">Rebel Construction &bull; Change Order 001</div>
+      <div class="phase-dates" contenteditable="true">Jul 13 – Jul 24, 2026 (est.)</div>
+      <div class="phase-desc" contenteditable="true">8"-thick slab at surface grade to carry the 8,900 lb saw on four legs. Grade-finished flush with existing paving to eliminate trip hazard. Not in base contract — pricing pending. Dimensions unresolved (see Notes).</div>
+    </div>
+
+    <div class="phase-card">
+      <div class="phase-num">04</div>
+      <div class="phase-status ps-progress">In Progress</div>
+      <h3 contenteditable="true">Building — Turn-Key</h3>
+      <div class="phase-meta" contenteditable="true">Rebel Construction &bull; Omar Rebeles &bull; Lump sum</div>
+      <div class="phase-dates" contenteditable="true">Jul 15 – Aug 12, 2026 (est.)</div>
+      <div class="phase-desc" contenteditable="true">Turn-key lump sum. Steel arrives 7/15; erection of the 50' x 25' pre-engineered canopy — 13" rafters, 10" purlins, square tube columns at 25'-0" on center minimum. Omar estimates 2–3 weeks. Roof deck, trim, gutter, downspouts, drop shade and all electrical follow under the same contract and the same bar on the schedule.</div>
+    </div>
+
+    <div class="phase-card">
+      <div class="phase-num">07</div>
+      <div class="phase-status ps-tentative">Tentative</div>
+      <h3 contenteditable="true">Saw Install &amp; Commissioning</h3>
+      <div class="phase-meta" contenteditable="true">MiTek &bull; MatchPoint Blade II</div>
+      <div class="phase-dates" contenteditable="true">Aug 3 – Aug 14, 2026 (est.)</div>
+      <div class="phase-desc" contenteditable="true">MiTek sets and anchors the saw on the new pad at delivery, with a minimum 3'-0" clear to the existing building for the rear electrical enclosure. Connect power and compressed air, then commission. Waste conveyor discharges to a self-dumping hopper.</div>
+    </div>
+
+    <div class="phase-card">
+      <div class="phase-num">08</div>
+      <div class="phase-status ps-pending">Pending</div>
+      <h3 contenteditable="true">Closeout</h3>
+      <div class="phase-meta" contenteditable="true">McCoy's &bull; Leeland Weiss</div>
+      <div class="phase-dates" contenteditable="true">Aug 10 – Aug 14, 2026 (est.)</div>
+      <div class="phase-desc" contenteditable="true">Final City of McAllen inspection, punch list walk, lien releases, as-built drawings and operations &amp; maintenance manual turnover. Capitalize to fixed assets.</div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════════════════ -->
+<!-- CAPEX COST SUMMARY                                      -->
+<!-- ════════════════════════════════════════════════════════ -->
+<div class="section">
+  <div class="section-title">Capital Expenditure Cost Summary — Work Breakdown Structure &amp; Authorization for Expenditure</div>
+  <table class="vendor-table">
+    <thead>
+      <tr>
+        <th>Cost Code</th>
+        <th>Scope</th>
+        <th>Vendor</th>
+        <th class="num">Committed</th>
+        <th>Status</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td class="cost-code">01.0</td>
+        <td contenteditable="true">Design, engineering &amp; permitting</td>
+        <td contenteditable="true">Garza Garza / Rebel</td>
+        <td class="num" contenteditable="true">incl. in base</td>
+        <td><span class="vendor-status-badge vsb-completed">Complete</span></td>
+      </tr>
+      <tr>
+        <td class="cost-code">02.0</td>
+        <td contenteditable="true">Sitework — asphalt saw cut</td>
+        <td contenteditable="true">Rebel Construction</td>
+        <td class="num" contenteditable="true">incl. in base</td>
+        <td><span class="vendor-status-badge vsb-completed">Complete</span></td>
+      </tr>
+      <tr>
+        <td class="cost-code">03.1–03.2</td>
+        <td contenteditable="true">Footings (30"x30"x36") &amp; bollards</td>
+        <td contenteditable="true">Rebel Construction</td>
+        <td class="num" contenteditable="true">incl. in base</td>
+        <td><span class="vendor-status-badge vsb-completed">Complete</span></td>
+      </tr>
+      <tr>
+        <td class="cost-code">04.0</td>
+        <td contenteditable="true">Structural steel — fab &amp; erection</td>
+        <td contenteditable="true">Rebel Construction</td>
+        <td class="num" contenteditable="true">incl. in base</td>
+        <td><span class="vendor-status-badge vsb-progress">In Progress</span></td>
+      </tr>
+      <tr>
+        <td class="cost-code">05.0</td>
+        <td contenteditable="true">Roof deck, trim, gutter, drop shade</td>
+        <td contenteditable="true">Rebel Construction</td>
+        <td class="num" contenteditable="true">incl. in base</td>
+        <td><span class="vendor-status-badge vsb-tentative">Scheduled</span></td>
+      </tr>
+      <tr>
+        <td class="cost-code">06.1–06.2</td>
+        <td contenteditable="true">Disconnect, feeder, 4 ea. LED high bay fixtures</td>
+        <td contenteditable="true">Rebel Construction</td>
+        <td class="num" contenteditable="true">incl. in base</td>
+        <td><span class="vendor-status-badge vsb-tentative">Scheduled</span></td>
+      </tr>
+      <tr class="cost-subtotal">
+        <td></td>
+        <td>Base contract — Lean-To, 1,250 sq ft</td>
+        <td>Rebel Construction</td>
+        <td class="num">$91,580.00</td>
+        <td><span class="vendor-status-badge vsb-confirmed">Executed</span></td>
+      </tr>
+      <tr>
+        <td class="cost-code">03.3</td>
+        <td contenteditable="true">Equipment pad — 8" slab, grade finish (Change Order 001)</td>
+        <td contenteditable="true">Rebel Construction</td>
+        <td class="num" contenteditable="true">TBD</td>
+        <td><span class="vendor-status-badge vsb-pending">Pending</span></td>
+      </tr>
+      <tr>
+        <td class="cost-code">07.1</td>
+        <td contenteditable="true">MatchPoint Blade II linear saw — includes delivery, set &amp; anchor</td>
+        <td contenteditable="true">MiTek</td>
+        <td class="num" contenteditable="true">TBD</td>
+        <td><span class="vendor-status-badge vsb-confirmed">Ordered</span></td>
+      </tr>
+      <tr>
+        <td class="cost-code">07.2</td>
+        <td contenteditable="true">Compressed air supply — 70 cubic feet per minute at 110 psi</td>
+        <td contenteditable="true">TBD</td>
+        <td class="num" contenteditable="true">TBD</td>
+        <td><span class="vendor-status-badge vsb-pending">Unassigned</span></td>
+      </tr>
+      <tr>
+        <td class="cost-code">07.3</td>
+        <td contenteditable="true">Commissioning &amp; startup</td>
+        <td contenteditable="true">MiTek</td>
+        <td class="num" contenteditable="true">TBD</td>
+        <td><span class="vendor-status-badge vsb-pending">Not scheduled</span></td>
+      </tr>
+      <tr class="cost-total">
+        <td></td>
+        <td>Total Authorized Expenditure</td>
+        <td></td>
+        <td class="num" contenteditable="true">TBD</td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <div class="cost-note">Cost codes on this table match the codes on the Gantt rows above. Report progress and spend against the same code. &nbsp;·&nbsp; "incl. in base" = covered by the executed Rebel Construction lump-sum contract; no separate commitment. &nbsp;·&nbsp; Authorized Expenditure = the total dollar amount approved for this project.</div>
+</div>
+
+<!-- ════════════════════════════════════════════════════════ -->
+<!-- SUBCONTRACTOR & VENDOR LIST                             -->
+<!-- ════════════════════════════════════════════════════════ -->
+<div class="section">
+  <div class="section-title">Subcontractor &amp; Vendor List</div>
+  <table class="vendor-table">
+    <thead>
+      <tr>
+        <th>Trade / Scope</th>
+        <th>Company</th>
+        <th>Contact</th>
+        <th>Phone</th>
+        <th>Sched Start</th>
+        <th>Status</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="vendor-dot vd-blue"></span><span contenteditable="true">Structural Engineering</span></td>
+        <td contenteditable="true">Garza Garza Consulting</td>
+        <td contenteditable="true">Inez B. Garza, PE</td>
+        <td contenteditable="true">956-432-9352</td>
+        <td contenteditable="true">Jun 1, 2026</td>
+        <td><span class="vendor-status-badge vsb-completed" contenteditable="true">Completed</span></td>
+      </tr>
+      <tr>
+        <td><span class="vendor-dot vd-blue"></span><span contenteditable="true">Electrical Design (A1.0)</span></td>
+        <td contenteditable="true">RC Design / Construction LLC</td>
+        <td contenteditable="true">—</td>
+        <td contenteditable="true">956-393-8452</td>
+        <td contenteditable="true">May 5, 2026</td>
+        <td><span class="vendor-status-badge vsb-completed" contenteditable="true">Completed</span></td>
+      </tr>
+      <tr>
+        <td><span class="vendor-dot vd-green"></span><span contenteditable="true">General Contractor — Lean-To</span></td>
+        <td contenteditable="true">Rebel Construction</td>
+        <td contenteditable="true">Omar Rebeles</td>
+        <td contenteditable="true">956-642-7335</td>
+        <td contenteditable="true">Jul 3, 2026</td>
+        <td><span class="vendor-status-badge vsb-progress" contenteditable="true">In Progress</span></td>
+      </tr>
+      <tr>
+        <td><span class="vendor-dot vd-orange"></span><span contenteditable="true">Equipment Pad (Change Order 001)</span></td>
+        <td contenteditable="true">Rebel Construction</td>
+        <td contenteditable="true">Omar Rebeles</td>
+        <td contenteditable="true">956-642-7335</td>
+        <td contenteditable="true">TBD</td>
+        <td><span class="vendor-status-badge vsb-pending" contenteditable="true">Pending</span></td>
+      </tr>
+      <tr>
+        <td><span class="vendor-dot vd-red"></span><span contenteditable="true">Blade II Saw — Delivery, Set &amp; Commissioning</span></td>
+        <td contenteditable="true">MiTek</td>
+        <td contenteditable="true">—</td>
+        <td contenteditable="true">—</td>
+        <td contenteditable="true">TBD</td>
+        <td><span class="vendor-status-badge vsb-confirmed" contenteditable="true">Ordered</span></td>
+      </tr>
+      <tr>
+        <td><span class="vendor-dot vd-orange"></span><span contenteditable="true">Building Inspection</span></td>
+        <td contenteditable="true">City of McAllen</td>
+        <td contenteditable="true">Permit CMM2026-03294</td>
+        <td contenteditable="true">—</td>
+        <td contenteditable="true">Jul 6, 2026</td>
+        <td><span class="vendor-status-badge vsb-progress" contenteditable="true">Ongoing</span></td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+<!-- ════════════════════════════════════════════════════════ -->
+<!-- SITE REFERENCES                                         -->
+<!-- ════════════════════════════════════════════════════════ -->
+<div class="section">
+  <div class="section-title">Site References</div>
+
+
+  <div class="site-ref-card">
+    <h3>MatchPoint Blade II — Equipment Data</h3>
+    <div class="site-ref-sub">MiTek &nbsp;&bull;&nbsp; Drives foundation, electrical and clearance requirements</div>
+    <ul class="spec-list">
+      <li><span class="k">Saw dimensions</span><span class="v">10' L × 8' W × 6'-6" H</span></li>
+      <li><span class="k">Saw weight</span><span class="v">8,900 lbs on 4 legs</span></li>
+      <li><span class="k">System footprint</span><span class="v">45'-9" L × 18' W</span></li>
+      <li><span class="k">Full layout length</span><span class="v">72'-3 1/8" (RL1807)</span></li>
+      <li><span class="k">Electrical</span><span class="v">230 volts, 60 Hz, 3-phase</span></li>
+      <li><span class="k">Full load amps + control</span><span class="v">67 amps</span></li>
+      <li><span class="k">Disconnect protection</span><span class="v">100 amps</span></li>
+      <li><span class="k">Compressed air</span><span class="v">70 cu. ft./min at 110 psi</span></li>
+      <li><span class="k">Airline</span><span class="v">3/4" minimum</span></li>
+      <li><span class="k">Ambient range</span><span class="v">41°F – 122°F</span></li>
+    </ul>
+  </div>
+
+  <div class="site-ref-card">
+    <h3>Design Constraints — Rebel Construction Mtg. 4/17/26</h3>
+    <div class="site-ref-sub">Omar, Kyle, Jeff &nbsp;&bull;&nbsp; Governs the built condition</div>
+    <ul class="spec-list">
+      <li><span class="k">Canopy</span><span class="v">50' × 25', 1,250 sq ft</span></li>
+      <li><span class="k">Projection from building</span><span class="v">25'-0"</span></li>
+      <li><span class="k">Column spacing (front)</span><span class="v">25'-0" on center, min</span></li>
+      <li><span class="k">Existing sidewall height</span><span class="v">17'-6" (not 16'-0")</span></li>
+      <li><span class="k">Drop shade clear opening</span><span class="v">8'-0" above floor, 3 sides</span></li>
+      <li><span class="k">Clear to existing building</span><span class="v">3'-0" min at saw</span></li>
+      <li><span class="k">Option 1 (cantilever tie-in)</span><span class="v">Rejected — rafters too light</span></li>
+      <li><span class="k">Waste conveyor</span><span class="v">Exposed left side to hopper</span></li>
+    </ul>
+  </div>
+
+  <div class="site-ref-card">
+    <h3>Terms Used on This Page</h3>
+    <div class="site-ref-sub">Plain-language definitions for anyone reading the schedule</div>
+    <ul class="spec-list">
+      <li><span class="k">CAPEX</span><span class="v">Capital Expenditure — money spent on a long-lived asset</span></li>
+      <li><span class="k">AFE</span><span class="v">Authorization for Expenditure — the approved project budget</span></li>
+      <li><span class="k">WBS</span><span class="v">Work Breakdown Structure — the numbered cost/task codes</span></li>
+      <li><span class="k">Change Order (CO)</span><span class="v">Added scope and cost beyond the signed contract</span></li>
+      <li><span class="k">RFI</span><span class="v">Request for Information — a written question to a designer or contractor</span></li>
+      <li><span class="k">Let / Awarded</span><span class="v">A scope of work that has been bid out and assigned to a contractor</span></li>
+      <li><span class="k">Committed</span><span class="v">Dollars locked in under a signed contract or purchase order</span></li>
+      <li><span class="k">Float</span><span class="v">Spare days in the schedule before a task delays the finish date</span></li>
+      <li><span class="k">Critical path</span><span class="v">The chain of tasks that sets the project's finish date</span></li>
+      <li><span class="k">Punch list</span><span class="v">Final fix-it items before the job is accepted</span></li>
+      <li><span class="k">AFF</span><span class="v">Above Finished Floor — a height measured from the floor</span></li>
+      <li><span class="k">On center (o.c.)</span><span class="v">Spacing measured from the middle of one column to the next</span></li>
+      <li><span class="k">AHJ</span><span class="v">Authority Having Jurisdiction — here, the City of McAllen</span></li>
+      <li><span class="k">PE</span><span class="v">Professional Engineer — licensed to seal the plans</span></li>
+      <li><span class="k">psi / scfm</span><span class="v">Air pressure (lbs/sq in) and air flow (cu ft/min)</span></li>
+      <li><span class="k">FLA</span><span class="v">Full Load Amps — current the saw draws running at capacity</span></li>
+      <li><span class="k">As-builts</span><span class="v">Drawings updated to show what was actually built</span></li>
+    </ul>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════════════════ -->
+<!-- NOTES                                                   -->
+<!-- ════════════════════════════════════════════════════════ -->
+<div class="section">
+  <div class="section-title">Notes &amp; Open Items</div>
+  <ul class="notes-list" contenteditable="true">
+    <li><span class="flag">Open</span><strong>Equipment pad dimensions conflict.</strong> Leeland's 7/6 direction was to size the pad "2 feet longer and wider than the machine on all sides" — with a 10' × 8' saw that yields a 14' × 12' pad. The pad currently being carried is 10' × 10'. Resolve with Omar before forming. Slab is 8" thick, 3,000 psi, grade-finished flush to existing paving to prevent a trip hazard.</li>
+    <li><span class="flag">Open</span><strong>Saw voltage.</strong> MiTek spec calls for 230 volts alternating current, 3-phase, and notes other voltages require a transformer. Sheet A1.0 shows a 3-phase 100-amp <em>120/208-volt</em> disconnect fed from existing 277/480-volt panel H-1. Rebel's proposal states 230 volts, 3-phase. Confirm transformer, conductor sizing and voltage with Omar and MiTek before rough-in.</li>
+    <li><span class="flag">Open</span><strong>Compressed air is unassigned.</strong> The saw requires 70 cubic feet per minute of air at 110 psi through a 3/4" minimum airline. No compressed air scope appears in Rebel's proposal. Determine whether existing plant air can carry it or whether a dedicated compressor and drop are needed — this is a hard prerequisite for commissioning (the startup and testing of the saw).</li>
+    <li><span class="flag flag-watch">Watch</span><strong>Schedule float is thin.</strong> The 120-day clock from the 4/17 meeting expires ~August 1. Steel lands 7/15; Omar's 2–3 week erection estimate puts completion between July 29 and August 5. The three-week case misses the date, and that is before roof, envelope, electrical and saw commissioning. Erection duration is the critical path — the chain of tasks that sets the finish date. Get a firm number from Omar.</li>
+    <li><span class="flag flag-watch">Watch</span><strong>Ambient temperature.</strong> Saw is rated 41°F–122°F ambient. Under an open canopy in McAllen, verify summer under-roof temperature stays inside the envelope before commissioning.</li>
+    <li><span class="flag flag-watch">Watch</span><strong>Change Order 001 not priced.</strong> Rebel is proceeding on the pad without an executed change order. Get pricing in writing before the pour to avoid a retroactive add against the Authorization for Expenditure (the approved project budget).</li>
+    <li>Foundation inspection for Permit CMM2026-03294 passed the morning of Mon 7/6. Steel inspection scheduled with the City of McAllen.</li>
+    <li>Three footers excavated Fri 7/3. Footings and bollards concreted Tue 7/7. Note: Omar's 7/6 email said he expected to pour Wednesday; the pour landed Tuesday.</li>
+    <li>Building materials due on site Wed 7/15; Omar begins lean-to erection on arrival.</li>
+    <li>Existing asphalt pavement remains under the canopy footprint except at footings and the new equipment pad. All other Blade II components (auto deck, infeed rail, skewed conveyor) bear on existing paving — load is distributed across many legs.</li>
+    <li>Sag rods added to framing per S2.0 revision dated 6/8/26.</li>
+    <li>MiTek layout RL1807 dated 4/7/26 carries an open question from Jeff on the outfeed extension — confirm whether it is being supplied, since it drives the 72'-3 1/8" overall length.</li>
+  </ul>
+</div>
+
+</div><!-- /container -->
+
+<!-- ════════════════════════════════════════════════════════ -->
+<!-- FOOTER                                                  -->
+<!-- ════════════════════════════════════════════════════════ -->
+<div class="footer">
+  <div>McCoy's Building Supply &nbsp;&bull;&nbsp; Rio Truss Warehouse Addition &nbsp;&bull;&nbsp; ST26-25</div>
+  <div contenteditable="true">Updated July 9, 2026</div>
+</div>
+
+</body>
+</html>
